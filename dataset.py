@@ -14,21 +14,25 @@ from PIL import Image, ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 class QDDataSet(data.Dataset):
-    def __init__(self, root, max_iters=None, resize_size=(72, 72), crop_size=(64, 64), mirror=True ):
+    def __init__(self, root, t_set='train', max_iters=None, resize_size=(72, 72), crop_size=(64, 64), mirror=True ):
         self.root = root
         self.crop_size = crop_size
         self.is_mirror = mirror
         self.resize_size = resize_size
+        self.max_iters = max_iters
         self.h = crop_size[0]
         self.w = crop_size[1]
-        self.img_ids = [i_id.strip() for i_id in open(osp.join(self.root, "train_list.txt"))]
+        if(t_set == 'train'):
+            self.img_ids = [i_id.strip() for i_id in open(osp.join(self.root, "train_list.txt"))]
+        if(t_set == 'val'):
+            self.img_ids = [i_id.strip() for i_id in open(osp.join(self.root, "val_list.txt"))]
         self.files = []
         self.class_list = {'airplane': 0, 'bee': 1, 'bicycle': 2, 'bird': 3, 'butterfly': 4, 'cake': 5,
                             'camera': 6, 'cat': 7, 'chair': 8, 'clock': 9, 'computer': 10,
                             'diamond': 11, 'door': 12, 'ear': 13, 'guitar': 14, 'hamburger': 15,
                             'hammer': 16, 'hand': 17, 'hat': 18, 'ladder': 19, 'leaf': 20,
                             'lion': 21, 'pencil': 22, 'rabbit': 23, 'scissors': 24, 'shoe': 25,
-                            'star': 26, 'sword': 27, 'The_Eiffel_Tower': 28, 'tree': 29}
+                            'star': 26, 'sword': 27, 'The Eiffel Tower': 28, 'tree': 29}
 
         for name in self.img_ids:
             img_file = osp.join(self.root, name)
@@ -45,6 +49,7 @@ class QDDataSet(data.Dataset):
         datafiles = self.files[index]
         image = Image.open(datafiles["img"]).convert('RGB')
         label = datafiles["label"]
+        #label = np.asarray([label], np.long)
         # resize
         image = image.resize(self.resize_size)
         image = np.asarray(image, np.float32)
@@ -58,7 +63,7 @@ class QDDataSet(data.Dataset):
         if self.is_mirror and random.random() < 0.5:
             image = np.flip(image, axis = 2)
 
-        return image.copy(), label
+        return image.copy(), label#.copy()
 
 
 if __name__ == '__main__':
