@@ -18,7 +18,7 @@ class_list = {'airplane': 0, 'bee': 1, 'bicycle': 2, 'bird': 3, 'butterfly': 4, 
     'diamond': 11, 'door': 12, 'ear': 13, 'guitar': 14, 'hamburger': 15,
     'hammer': 16, 'hand': 17, 'hat': 18, 'ladder': 19, 'leaf': 20,
     'lion': 21, 'pencil': 22, 'rabbit': 23, 'scissors': 24, 'shoe': 25,
-    'star': 26, 'sword': 27, 'The_Eiffel_Tower': 28, 'tree': 29}
+    'star': 26, 'sword': 27, 'The Eiffel Tower': 28, 'tree': 29}
 
 def convert_csv_to_png(file_name, save_dir):
     datafile = open(file_name, 'r')
@@ -31,7 +31,7 @@ def convert_csv_to_png(file_name, save_dir):
     for data in datareader: # for each img...
         idx = idx + 1
         if(idx == 1): continue
-        if(idx == 3001): break
+        if(idx == 20001): break
 
         num = data[0]
         stroke = data[1]

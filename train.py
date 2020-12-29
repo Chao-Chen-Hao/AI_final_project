@@ -22,7 +22,7 @@ from dataset import QDDataSet
 
 #### Hyperparameters ####
 WEIGHT_DECAY = 0.0005
-LEARNING_RATE = 5e-1
+LEARNING_RATE = 3e-1
 MOMENTUM = 0.9
 POWER = 0.9
 RANDOM_SEED = 1234
@@ -37,7 +37,7 @@ DATA_DIRECTORY = '../Warehouse/dataset/train/'
 DATA_VAL_DIRECTORY = '../Warehouse/dataset/val/'
 SNAPSHOT_DIR = './snapshots'
 LOG_DIR = './log'
-RESTORE_FROM = None
+RESTORE_FROM = 'snapshots/model.pth'
 
 def get_arguments():
     parser = argparse.ArgumentParser(description="Network")
@@ -86,7 +86,6 @@ def evaluate(args, model):
         QDDataSet(root=args.data_val_dir, t_set='val', max_iters=total/args.batch_size,
                 resize_size=(128, 128), crop_size=(128, 128), mirror=False),
     batch_size=args.batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=False)
-    testloader_iter = enumerate(testloader)
 
     sm = torch.nn.Softmax(dim = 1)
     accuracy = 0
@@ -141,7 +140,12 @@ def main():
 
         adjust_learning_rate(Trainer.gen_opt, i_iter, args)
 
-        _, batch = trainloader_iter.__next__()
+        try:
+            _, batch = trainloader_iter.__next__()
+        except StopIteration:
+            trainloader_iter = enumerate(trainloader)
+            _, batch = trainloader_iter.__next__()
+
         images, labels = batch
         images = images.cuda()
         labels = labels.long().cuda()

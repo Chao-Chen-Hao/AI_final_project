@@ -46,7 +46,7 @@ class QDDataSet(data.Dataset):
         return len(self.files)
 
     def __getitem__(self, index):
-        datafiles = self.files[index]
+        datafiles = self.files[index % len(self.files)]
         image = Image.open(datafiles["img"]).convert('RGB')
         label = datafiles["label"]
         #label = np.asarray([label], np.long)
