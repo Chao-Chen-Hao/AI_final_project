@@ -11,6 +11,8 @@ matplotlib.use('Agg')
 # This program converts the doodling lines into images (.png).
 ####
 
+TEST = False
+SAMPLE_NUM = 3001
 CSV_DIR = '../Warehouse/dataset/train_csv/'
 SAVE_DIR = '../Warehouse/dataset/train/'
 class_list = {'airplane': 0, 'bee': 1, 'bicycle': 2, 'bird': 3, 'butterfly': 4, 'cake': 5,
@@ -23,7 +25,6 @@ class_list = {'airplane': 0, 'bee': 1, 'bicycle': 2, 'bird': 3, 'butterfly': 4, 
 def convert_csv_to_png(file_name, save_dir):
     datafile = open(file_name, 'r')
     list_file = open(save_dir + "train_list.txt", "a+")
-    #gt_list_file = open(save_dir + "label_list.txt", "a+")
 
     datareader = csv.reader(datafile, delimiter=',')
     data = []
@@ -31,7 +32,7 @@ def convert_csv_to_png(file_name, save_dir):
     for data in datareader: # for each img...
         idx = idx + 1
         if(idx == 1): continue
-        if(idx == 20001): break
+        if(idx == SAMPLE_NUM): break
 
         num = data[0]
         stroke = data[1]
@@ -53,12 +54,14 @@ def convert_csv_to_png(file_name, save_dir):
         ax.xaxis.set_ticks_position('top')
         ax.invert_yaxis()
         plt.axis('off')
-        file_name = label + "/" + num + ".png"
+        if (TEST):
+            file_name = num + ".png"
+        else:
+            file_name = label + "/" + num + ".png"
         plt.savefig(save_dir + file_name)
         plt.close()
 
         list_file.write(file_name + "\n")
-        #gt_list_file.write(str(class_list[label]) + "\n")
 
         print("-----------")
         print("Class: ", label)

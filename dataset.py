@@ -22,10 +22,13 @@ class QDDataSet(data.Dataset):
         self.max_iters = max_iters
         self.h = crop_size[0]
         self.w = crop_size[1]
-        if(t_set == 'train'):
+        self.t_set = t_set
+        if(self.t_set == 'train'):
             self.img_ids = [i_id.strip() for i_id in open(osp.join(self.root, "train_list.txt"))]
-        if(t_set == 'val'):
+        if(self.t_set == 'val'):
             self.img_ids = [i_id.strip() for i_id in open(osp.join(self.root, "val_list.txt"))]
+        if(self.t_set == 'test'):
+            self.img_ids = [i_id.strip() for i_id in open(osp.join(self.root, "test_list.txt"))]
         self.files = []
         self.class_list = {'airplane': 0, 'bee': 1, 'bicycle': 2, 'bird': 3, 'butterfly': 4, 'cake': 5,
                             'camera': 6, 'cat': 7, 'chair': 8, 'clock': 9, 'computer': 10,
@@ -36,34 +39,52 @@ class QDDataSet(data.Dataset):
 
         for name in self.img_ids:
             img_file = osp.join(self.root, name)
-            label = self.class_list[name.split('/')[0]]
-            self.files.append({
-                "img": img_file,
-                "label": label
-            })
+            if(self.t_set == 'test'):
+                self.files.append({
+                    "img": img_file
+                })
+            else:
+                label = self.class_list[name.split('/')[0]]
+                self.files.append({
+                    "img": img_file,
+                    "label": label
+                })
 
     def __len__(self):
         return len(self.files)
 
     def __getitem__(self, index):
-        datafiles = self.files[index % len(self.files)]
-        image = Image.open(datafiles["img"]).convert('RGB')
-        label = datafiles["label"]
-        #label = np.asarray([label], np.long)
-        # resize
-        image = image.resize(self.resize_size)
-        image = np.asarray(image, np.float32)
+        if(self.t_set == 'test'):
+            datafiles = self.files[index % len(self.files)]
+            image = Image.open(datafiles["img"]).convert('RGB')
+            image = image.resize(self.resize_size)
+            image = np.asarray(image, np.float32)
+            size = image.shape
+            image = image.transpose((2, 0, 1))
+            x1 = random.randint(0, image.shape[1] - self.h)
+            y1 = random.randint(0, image.shape[2] - self.w)
+            image = image[:, x1:x1+self.h, y1:y1+self.w]
+            return image.copy()
+            
+        else:
+            datafiles = self.files[index % len(self.files)]
+            image = Image.open(datafiles["img"]).convert('RGB')
+            label = datafiles["label"]
+            #label = np.asarray([label], np.long)
+            # resize
+            image = image.resize(self.resize_size)
+            image = np.asarray(image, np.float32)
 
-        size = image.shape
-        image = image.transpose((2, 0, 1))
-        x1 = random.randint(0, image.shape[1] - self.h)
-        y1 = random.randint(0, image.shape[2] - self.w)
-        image = image[:, x1:x1+self.h, y1:y1+self.w]
+            size = image.shape
+            image = image.transpose((2, 0, 1))
+            x1 = random.randint(0, image.shape[1] - self.h)
+            y1 = random.randint(0, image.shape[2] - self.w)
+            image = image[:, x1:x1+self.h, y1:y1+self.w]
 
-        if self.is_mirror and random.random() < 0.5:
-            image = np.flip(image, axis = 2)
+            if self.is_mirror and random.random() < 0.5:
+                image = np.flip(image, axis = 2)
 
-        return image.copy(), label#.copy()
+            return image.copy(), label#.copy()
 
 
 if __name__ == '__main__':
