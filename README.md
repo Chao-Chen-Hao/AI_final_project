@@ -10,4 +10,7 @@
 |----|----|
 |<img src="https://i.imgur.com/DcTQV3o.png" alt="acc" width="300">| <img src="https://i.imgur.com/X7L1bBJ.png" alt="acc" width="300">|
 
-- Pretrained weights: available at https://drive.google.com/file/d/1qCcw7hlXilw-axyEJqt26IHx9M4YRuPl/view?usp=sharing
+- Pretrained Weights: available at https://drive.google.com/file/d/1qCcw7hlXilw-axyEJqt26IHx9M4YRuPl/view?usp=sharing
+
+### Generator
+- Pretrained Weights: available at https://drive.google.com/file/d/1z6oQG5zG0xyDVu7me8pSP6k91oEKNOAv/view?usp=sharing
