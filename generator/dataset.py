@@ -9,12 +9,12 @@ import collections
 import torch
 import torchvision
 from torch.utils import data
-from PIL import Image, ImageFile, ImageOps
+from PIL import Image, ImageFile
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 class QDDataSet(data.Dataset):
-    def __init__(self, root, t_set='train', s_label='airplane', max_iters=None, resize_size=(72, 72), crop_size=(64, 64), mirror=True ):
+    def __init__(self, root, t_set='train', max_iters=None, resize_size=(72, 72), crop_size=(64, 64), mirror=True ):
         self.root = root
         self.crop_size = crop_size
         self.is_mirror = mirror
@@ -22,12 +22,12 @@ class QDDataSet(data.Dataset):
         self.max_iters = max_iters
         self.h = crop_size[0]
         self.w = crop_size[1]
-        self.seed = 123
-        if(t_set == 'train'):
+        self.t_set = t_set
+        if(self.t_set == 'train'):
             self.img_ids = [i_id.strip() for i_id in open(osp.join(self.root, "train_list.txt"))]
-        if(t_set == 'val'):
+        if(self.t_set == 'val'):
             self.img_ids = [i_id.strip() for i_id in open(osp.join(self.root, "val_list.txt"))]
-        if(t_set == 'test'):
+        if(self.t_set == 'test'):
             self.img_ids = [i_id.strip() for i_id in open(osp.join(self.root, "test_list.txt"))]
         self.files = []
         self.class_list = {'airplane': 0, 'bee': 1, 'bicycle': 2, 'bird': 3, 'butterfly': 4, 'cake': 5,
@@ -39,38 +39,52 @@ class QDDataSet(data.Dataset):
 
         for name in self.img_ids:
             img_file = osp.join(self.root, name)
-            #if (name.split('/')[0] == s_label): # and int(name.split('/')[1].split('.')[0])<0
-            label = self.class_list[name.split('/')[0]]
-            idx = (name.split('/')[1]).split('.')[0]
-            
-            self.files.append({
-                "img": img_file,
-                "label": label,
-                "idx": int(idx)
-            })
+            if(self.t_set == 'test'):
+                self.files.append({
+                    "img": img_file
+                })
+            else:
+                label = self.class_list[name.split('/')[0]]
+                self.files.append({
+                    "img": img_file,
+                    "label": label
+                })
 
     def __len__(self):
         return len(self.files)
 
     def __getitem__(self, index):
-        datafiles = self.files[index % len(self.files)]
-        image = Image.open(datafiles["img"]).convert('L')
-        image = ImageOps.grayscale(image)
-        label = datafiles["label"]
-        idx = datafiles["idx"]
-        label_oh = np.zeros((500, 1, 1), np.float32)
-        label_oh[label * 10 + idx + self.seed, 0, 0] = 1
+        if(self.t_set == 'test'):
+            datafiles = self.files[index % len(self.files)]
+            image = Image.open(datafiles["img"]).convert('RGB')
+            image = image.resize(self.resize_size)
+            image = np.asarray(image, np.float32)
+            size = image.shape
+            image = image.transpose((2, 0, 1))
+            x1 = random.randint(0, image.shape[1] - self.h)
+            y1 = random.randint(0, image.shape[2] - self.w)
+            image = image[:, x1:x1+self.h, y1:y1+self.w]
+            return image.copy()
+            
+        else:
+            datafiles = self.files[index % len(self.files)]
+            image = Image.open(datafiles["img"]).convert('RGB')
+            label = datafiles["label"]
+            #label = np.asarray([label], np.long)
+            # resize
+            image = image.resize(self.resize_size)
+            image = np.asarray(image, np.float32)
 
-        # resize
-        image = image.resize(self.resize_size)
-        image = np.asarray(image, np.float32)
-        image = np.expand_dims(image, axis=0)
-        
-        im_copy = image.copy()
-        image[im_copy < 250] = 0.0
-        image[im_copy >= 250] = 255.0
+            size = image.shape
+            image = image.transpose((2, 0, 1))
+            x1 = random.randint(0, image.shape[1] - self.h)
+            y1 = random.randint(0, image.shape[2] - self.w)
+            image = image[:, x1:x1+self.h, y1:y1+self.w]
 
-        return image.copy() / 255.0, label_oh.copy()
+            if self.is_mirror and random.random() < 0.5:
+                image = np.flip(image, axis = 2)
+
+            return image.copy(), label#.copy()
 
 
 if __name__ == '__main__':
